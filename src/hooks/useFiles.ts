@@ -1,27 +1,53 @@
-import { useCallback, useMemo, useState } from 'react';
-import type { FileItem } from '../types';
+import { useState, useCallback, useMemo } from 'react';
+import { FileItem, FilesHookReturn } from '../types';
 import { initialFiles } from '../data/mockData';
 
-export function useFiles() {
+export function useFiles(): FilesHookReturn {
   const [files, setFiles] = useState<FileItem[]>(initialFiles);
+  const [showPreviewDrawer, setShowPreviewDrawer] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
 
-  const onToggleFavorite = useCallback((fileId: string) => {
-    setFiles(prev =>
-      prev.map(f => (f.id === fileId ? { ...f, isFavorite: !f.isFavorite } : f)),
-    );
-  }, []);
-
-  const onFileSelect = useCallback((file: FileItem) => {
+  const handleFileSelect = useCallback((file: FileItem) => {
     setSelectedFile(file);
+    setShowPreviewDrawer(true);
   }, []);
 
-  const recentFiles = useMemo(() => {
-    const order = ['방금 전', '2시간 전', '5시간 전', '1일 전', '2일 전', '3일 전', '1주 전'];
-    return [...files].sort(
-      (a, b) => order.indexOf(a.modified) - order.indexOf(b.modified),
+  const handleClosePreview = useCallback(() => {
+    setShowPreviewDrawer(false);
+    setSelectedFile(null);
+  }, []);
+
+  const handleToggleFavorite = useCallback((fileId: string) => {
+    setFiles(prevFiles => 
+      prevFiles.map(file => 
+        file.id === fileId 
+          ? { ...file, isFavorite: !file.isFavorite }
+          : file
+      )
     );
+  }, []);
+
+  // 파일 통계를 메모이제이션
+  const fileStats = useMemo(() => {
+    const totalFiles = files.length;
+    const favoriteFiles = files.filter(file => file.isFavorite);
+    const recentFiles = files.slice(0, 5);
+    
+    return {
+      totalFiles,
+      favoriteFiles,
+      recentFiles,
+      favoriteCount: favoriteFiles.length
+    };
   }, [files]);
 
-  return { files, recentFiles, selectedFile, setSelectedFile, onToggleFavorite, onFileSelect };
+  return {
+    files,
+    showPreviewDrawer,
+    selectedFile,
+    onFileSelect: handleFileSelect,
+    onToggleFavorite: handleToggleFavorite,
+    handleClosePreview,
+    ...fileStats
+  };
 }

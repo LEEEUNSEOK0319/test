@@ -1,22 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { Toaster as Sonner, ToasterProps } from "sonner";
+import { useTheme } from "next-themes@0.4.6";
+import { Toaster as Sonner, ToasterProps } from "sonner@2.0.3";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const [theme, setTheme] = React.useState("system");
-
-  React.useEffect(() => {
-    // Vite 환경에서는 window 객체를 직접 사용하여 테마를 확인합니다.
-    const storedTheme = window.localStorage.getItem("theme");
-    if (storedTheme) {
-      setTheme(storedTheme);
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme("dark");
-    } else {
-      setTheme("light");
-    }
-  }, []);
+  const { theme = "system" } = useTheme();
 
   return (
     <Sonner
