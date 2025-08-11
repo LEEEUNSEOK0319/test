@@ -1,3 +1,4 @@
+// src/components/FileSearchModal.tsx
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
@@ -8,18 +9,17 @@ import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ScrollArea } from './ui/scroll-area';
 import { Card } from './ui/card';
-import { 
-  Search, 
-  X, 
-  Filter, 
-  Calendar as CalendarIcon, 
+import {
+  Search,
+  Filter,
+  Calendar as CalendarIcon,
   FileText,
   File,
   FileSpreadsheet,
   ExternalLink,
   Star
 } from 'lucide-react';
-import { FileItem } from '../App';
+import type { FileItem } from '../types';
 
 interface FileSearchModalProps {
   isOpen: boolean;
@@ -37,12 +37,12 @@ const recentQueries = [
   '신제품 기획서'
 ];
 
-export function FileSearchModal({ 
-  isOpen, 
-  onClose, 
-  onFileSelect, 
-  files, 
-  onToggleFavorite 
+export function FileSearchModal({
+  isOpen,
+  onClose,
+  onFileSelect,
+  files,
+  onToggleFavorite
 }: FileSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [fileType, setFileType] = useState('all');
@@ -52,13 +52,10 @@ export function FileSearchModal({
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const getFileIcon = (icon: string, type: string) => {
-    // 기존 이모지 아이콘이 있으면 그것을 사용
+  const getFileIcon = (icon: string | undefined, type: string) => {
     if (icon && icon !== type) {
       return <span className="text-lg">{icon}</span>;
     }
-    
-    // 없으면 타입에 따라 아이콘 표시
     switch (type.toLowerCase()) {
       case 'pdf':
         return <File className="w-4 h-4 text-red-500" />;
@@ -78,45 +75,37 @@ export function FileSearchModal({
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-    
     setIsSearching(true);
-    // 실제 파일 데이터에서 검색
+
     setTimeout(() => {
-      let filteredFiles = files.filter(file => 
-        file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        file.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        file.modifiedBy.toLowerCase().includes(searchQuery.toLowerCase())
+      let filtered = files.filter(f =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.modifiedBy.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-      // 파일 타입 필터 적용
       if (fileType !== 'all') {
-        filteredFiles = filteredFiles.filter(file => 
-          file.type.toLowerCase() === fileType.toLowerCase()
-        );
+        filtered = filtered.filter(f => f.type.toLowerCase() === fileType.toLowerCase());
       }
-
-      // 작성자 필터 적용
       if (owner !== 'all') {
-        filteredFiles = filteredFiles.filter(file => 
-          file.modifiedBy === owner
-        );
+        filtered = filtered.filter(f => f.modifiedBy === owner);
       }
 
-      setSearchResults(filteredFiles);
+      setSearchResults(filtered);
       setIsSearching(false);
-    }, 1000);
+    }, 500);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
   };
 
   const handleQuerySelect = (query: string) => {
     setSearchQuery(query);
     handleSearch();
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSearch();
-    }
   };
 
   const clearFilters = () => {
@@ -125,11 +114,10 @@ export function FileSearchModal({
     setDateRange({});
   };
 
-  // 고유한 작성자 목록 생성
-  const uniqueAuthors = Array.from(new Set(files.map(file => file.modifiedBy)));
+  const uniqueAuthors = Array.from(new Set(files.map(f => f.modifiedBy)));
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col glass-strong border border-white/20">
         <DialogHeader>
           <DialogTitle className="text-gray-900 dark:text-white">파일 검색</DialogTitle>
@@ -145,7 +133,7 @@ export function FileSearchModal({
               placeholder="예: 2023년 발표자료, 송무 관련 PDF, 회의록 요약본"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               className="flex-1 bg-white/80 dark:bg-gray-800/80 border border-white/20"
             />
             <Button
@@ -157,7 +145,7 @@ export function FileSearchModal({
             </Button>
             <Button
               variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={() => setShowFilters(s => !s)}
               className="border-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/10"
             >
               <Filter className="w-4 h-4" />
@@ -168,14 +156,14 @@ export function FileSearchModal({
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">최근 검색어</p>
             <div className="flex flex-wrap gap-2">
-              {recentQueries.map((query, index) => (
+              {recentQueries.map((q, i) => (
                 <Badge
-                  key={index}
+                  key={i}
                   variant="secondary"
                   className="cursor-pointer hover:bg-white/20 bg-white/10 text-gray-700 dark:text-gray-300 card-hover"
-                  onClick={() => handleQuerySelect(query)}
+                  onClick={() => handleQuerySelect(q)}
                 >
-                  {query}
+                  {q}
                 </Badge>
               ))}
             </div>
@@ -184,12 +172,12 @@ export function FileSearchModal({
           {/* Filters */}
           {showFilters && (
             <Card className="p-4 glass border border-white/20">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">파일 형식</label>
                   <Select value={fileType} onValueChange={setFileType}>
                     <SelectTrigger className="bg-white/80 dark:bg-gray-800/80 border border-white/20">
-                      <SelectValue />
+                      <SelectValue placeholder="모든 형식" />
                     </SelectTrigger>
                     <SelectContent className="glass-strong border border-white/20">
                       <SelectItem value="all">모든 형식</SelectItem>
@@ -205,7 +193,7 @@ export function FileSearchModal({
                   <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">작성자</label>
                   <Select value={owner} onValueChange={setOwner}>
                     <SelectTrigger className="bg-white/80 dark:bg-gray-800/80 border border-white/20">
-                      <SelectValue />
+                      <SelectValue placeholder="모든 사용자" />
                     </SelectTrigger>
                     <SelectContent className="glass-strong border border-white/20">
                       <SelectItem value="all">모든 사용자</SelectItem>
@@ -220,8 +208,8 @@ export function FileSearchModal({
                   <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">수정 날짜</label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full justify-start bg-white/80 dark:bg-gray-800/80 border border-white/20"
                       >
                         <CalendarIcon className="w-4 h-4 mr-2" />
@@ -232,7 +220,7 @@ export function FileSearchModal({
                       <Calendar
                         mode="range"
                         selected={dateRange}
-                        onSelect={setDateRange}
+                        onSelect={(v) => setDateRange(v as any)}
                       />
                     </PopoverContent>
                   </Popover>
@@ -265,7 +253,10 @@ export function FileSearchModal({
             <div className="space-y-3">
               <p className="text-sm text-gray-600 dark:text-gray-400">{searchResults.length}개의 결과</p>
               {searchResults.map((file) => (
-                <Card key={file.id} className="p-4 glass hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all border border-white/20 card-hover group">
+                <Card
+                  key={file.id}
+                  className="p-4 glass hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all border border-white/20 card-hover group"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       {getFileIcon(file.icon, file.type)}
@@ -293,12 +284,12 @@ export function FileSearchModal({
                         }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0 hover:bg-white/20"
                       >
-                        <Star 
+                        <Star
                           className={`w-4 h-4 ${
-                            file.isFavorite 
-                              ? 'text-yellow-500 fill-yellow-500' 
+                            file.isFavorite
+                              ? 'text-yellow-500 fill-yellow-500'
                               : 'text-gray-400 hover:text-yellow-500'
-                          }`} 
+                          }`}
                         />
                       </Button>
                       <Button

@@ -6,7 +6,7 @@ import {
   MessageCircle, 
   Settings
 } from 'lucide-react';
-import { MobileNavProps } from '../../types';
+import type { MobileNavProps } from '../../types';
 
 const NAV_ITEMS = [
   {

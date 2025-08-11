@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { FileItem, FilesHookReturn } from '../types';
+import type { FileItem, FilesHookReturn } from '../types';
 import { initialFiles } from '../data/mockData';
+
 
 export function useFiles(): FilesHookReturn {
   const [files, setFiles] = useState<FileItem[]>(initialFiles);

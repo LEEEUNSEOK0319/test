@@ -19,7 +19,7 @@ import {
   Filter,
   MoreVertical
 } from 'lucide-react';
-import { FileItem, ChatMessage } from '../App';
+import type { FileItem, ChatMessage } from '../types';
 import { FileSearchModal } from './FileSearchModal';
 import Sidebar from '../imports/Sidebar-2051-288';
 

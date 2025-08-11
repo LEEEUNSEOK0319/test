@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Screen, AuthHookReturn } from '../types';
+import type { Screen, AuthHookReturn } from '../types';
 
 export function useAuth(): AuthHookReturn {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

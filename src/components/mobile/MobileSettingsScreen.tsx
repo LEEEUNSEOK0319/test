@@ -17,7 +17,7 @@ import {
   HelpCircle,
   Shield
 } from 'lucide-react';
-import { MobileSettingsScreenProps } from '../../types';
+import type { MobileSettingsScreenProps } from '../../types';
 
 const MobileSettingsScreen: React.FC<MobileSettingsScreenProps> = ({
   onBack,

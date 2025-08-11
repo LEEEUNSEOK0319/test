@@ -1,15 +1,17 @@
+// src/types/index.ts
+
 export type Screen = 'login' | 'signup' | 'onboarding' | 'home' | 'chat' | 'settings';
 
 export interface FileItem {
   id: string;
   name: string;
-  type: string;
+  type: 'pdf' | 'word' | 'excel' | 'powerpoint' | string;
   size: string;
-  modified: string;
-  modifiedBy: string;
+  modified: string;    // 예: '방금 전', '2시간 전'
+  modifiedBy: string;  // 예: '김마케팅'
   path: string;
-  icon: string;
-  isFavorite: boolean;
+  icon?: string;       // 이모지/아이콘 (옵션)
+  isFavorite?: boolean;
 }
 
 export interface ChatMessage {
@@ -23,10 +25,9 @@ export interface ChatMessage {
 export interface ApiKey {
   id: string;
   name: string;
-  key: string;
   maskedKey: string;
-  created: string;
-  lastUsed: string;
+  created: string;     // 'YYYY-MM-DD'
+  lastUsed: string;    // 예: '방금 전'
   isConnected: boolean;
 }
 
@@ -38,7 +39,10 @@ export interface AppState {
   isAuthenticated: boolean;
 }
 
-// Hook 반환 타입들
+/* =============================
+   Hook 반환 타입들
+   ============================= */
+
 export interface AuthHookReturn {
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
@@ -57,6 +61,7 @@ export interface FilesHookReturn {
   onFileSelect: (file: FileItem) => void;
   onToggleFavorite: (fileId: string) => void;
   handleClosePreview: () => void;
+  // stats
   totalFiles: number;
   favoriteFiles: FileItem[];
   recentFiles: FileItem[];
@@ -84,7 +89,10 @@ export interface MobileHookReturn {
   isDesktop: boolean;
 }
 
-// 컴포넌트 Props 타입들
+/* =============================
+   컴포넌트 Props 타입들
+   ============================= */
+
 export interface BaseScreenProps {
   onNavigateToChat: () => void;
   onOpenSettings: () => void;
@@ -112,8 +120,14 @@ export interface SettingsProps {
   onToggleDarkMode: (value: boolean) => void;
 }
 
-// 모바일 컴포넌트 Props
-export interface MobileHomeScreenProps extends BaseScreenProps, FileManagementProps, ApiKeyManagementProps {}
+/* =============================
+   모바일 컴포넌트 Props
+   ============================= */
+
+export interface MobileHomeScreenProps
+  extends BaseScreenProps,
+    FileManagementProps,
+    ApiKeyManagementProps {}
 
 export interface MobileChatInterfaceProps extends FileManagementProps {
   onOpenSettings: () => void;
@@ -121,7 +135,9 @@ export interface MobileChatInterfaceProps extends FileManagementProps {
   initialMessage?: string;
 }
 
-export interface MobileSettingsScreenProps extends SettingsProps, ApiKeyManagementProps {}
+export interface MobileSettingsScreenProps
+  extends SettingsProps,
+    ApiKeyManagementProps {}
 
 export interface MobileNavProps {
   currentScreen: Screen;
@@ -129,6 +145,9 @@ export interface MobileNavProps {
   hasUnreadMessages?: boolean;
 }
 
-// 레거시 호환성을 위한 타입들
+/* =============================
+   레거시 호환 타입 (선택)
+   ============================= */
+
 export interface HomeScreenProps extends MobileHomeScreenProps {}
 export interface ChatInterfaceProps extends MobileChatInterfaceProps {}

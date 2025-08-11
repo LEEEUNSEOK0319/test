@@ -15,7 +15,7 @@ import {
   Zap,
   MoreVertical
 } from 'lucide-react';
-import { MobileChatInterfaceProps, ChatMessage } from '../../types';
+import type { MobileChatInterfaceProps, ChatMessage } from '../../types';
 
 const QUICK_QUESTIONS = [
   "파일 내용 요약해주세요",

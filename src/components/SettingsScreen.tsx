@@ -7,7 +7,7 @@ import { Switch } from './ui/switch';
 import { ApiKeyModal } from './ApiKeyModal';
 import { ApiConnectionStatus } from './ApiConnectionStatus';
 import { HelpModal } from './HelpModal';
-import { ApiKey } from '../App';
+import type { ApiKey } from '../types';
 import { 
   ArrowLeft, 
   User, 

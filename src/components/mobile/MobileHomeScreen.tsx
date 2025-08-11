@@ -13,7 +13,7 @@ import {
   Clock,
   TrendingUp
 } from 'lucide-react';
-import { MobileHomeScreenProps } from '../../types';
+import type { MobileHomeScreenProps } from '../../types';
 
 const RECOMMENDED_QUESTIONS = [
   "마케팅 전략 문서에서 핵심 내용을 요약해주세요",

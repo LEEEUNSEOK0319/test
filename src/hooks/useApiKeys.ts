@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ApiKey, ApiKeysHookReturn } from '../types';
+import type { ApiKey, ApiKeysHookReturn } from '../types';
 import { initialApiKeys } from '../data/mockData';
 
 export function useApiKeys(): ApiKeysHookReturn {

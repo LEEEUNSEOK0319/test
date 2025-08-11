@@ -24,7 +24,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import Sidebar from '../imports/Sidebar-2051-288';
-import { FileItem, ApiKey } from '../App';
+import type { FileItem, ApiKey } from '../types';
 import { FileSearchModal } from './FileSearchModal';
 
 interface HomeScreenProps {

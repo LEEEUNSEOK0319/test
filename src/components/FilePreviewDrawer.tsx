@@ -18,7 +18,7 @@ import {
   Tag,
   MessageSquare
 } from 'lucide-react';
-import { FileItem } from '../App';
+import type { FileItem} from '../types';
 
 interface FilePreviewDrawerProps {
   file: FileItem;

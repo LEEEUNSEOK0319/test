@@ -1,4 +1,4 @@
-import { FileItem, ApiKey } from '../types';
+import type { FileItem, ApiKey } from '../types';
 
 export const initialApiKeys: ApiKey[] = [
   {
