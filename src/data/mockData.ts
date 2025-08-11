@@ -3,18 +3,18 @@ import type { FileItem, ApiKey } from '../types';
 export const initialFiles: FileItem[] = [
   {
     id: 'f1',
-    name: '분기별_마켓팅_전략.pdf',
+    name: '분기별_마케팅_전략.pdf',
     type: 'pdf',
     size: '2.1MB',
     modified: '2시간 전',
-    modifiedBy: '김마켓팅',
+    modifiedBy: '김마케팅',
     path: '/marketing/strategy/Q2/',
     icon: '📄',
     isFavorite: true,
   },
   {
     id: 'f2',
-    name: '브랜드_가이드랜.pptx',
+    name: '브랜드_가이드라인.pptx',
     type: 'powerpoint',
     size: '8.4MB',
     modified: '1일 전',

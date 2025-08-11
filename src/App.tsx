@@ -1,173 +1,128 @@
-import React, { Suspense, useMemo } from 'react';
-import { ErrorBoundary } from './components/ErrorBoundary';
-
-// 공통 컴포넌트들 (미리 로드)
-import { LoginScreen } from './components/LoginScreen';
-import { SignupScreen } from './components/SignupScreen';
-import { OnboardingScreen } from './components/OnboardingScreen';
-import { FilePreviewDrawer } from './components/FilePreviewDrawer';
-
-// 데스크탑 컴포넌트들 (지연 로딩)
-const HomeScreen = React.lazy(() => import('./components/HomeScreen').then(m => ({ default: m.HomeScreen })));
-const MainChatInterface = React.lazy(() => import('./components/MainChatInterface').then(m => ({ default: m.MainChatInterface })));
-const SettingsScreen = React.lazy(() => import('./components/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
-
-// 모바일 컴포넌트들 (default export로 변경됨)
-const MobileHomeScreen = React.lazy(() => import('./components/mobile/MobileHomeScreen'));
-const MobileChatInterface = React.lazy(() => import('./components/mobile/MobileChatInterface'));
-const MobileSettingsScreen = React.lazy(() => import('./components/mobile/MobileSettingsScreen'));
-const MobileBottomNav = React.lazy(() => import('./components/mobile/MobileBottomNav'));
-
-// 훅들
-import { useAuth } from './hooks/useAuth';
-import { useDarkMode } from './hooks/useDarkMode';
+import React, { useState } from 'react';
 import { useFiles } from './hooks/useFiles';
 import { useApiKeys } from './hooks/useApiKeys';
 import { useMobile } from './hooks/useMobile';
-import { Screen } from './types';
+import type { FileItem, Screen } from './types';
 
-// 로딩 컴포넌트 개선
-const LoadingSpinner: React.FC = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="flex flex-col items-center space-y-4">
-      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      <p className="text-sm text-muted-foreground animate-pulse">로딩 중...</p>
-    </div>
-  </div>
-);
+import { LoginScreen } from './components/LoginScreen';
+import { SignupScreen } from './components/SignupScreen';
+import { OnboardingScreen } from './components/OnboardingScreen';
+import { HomeScreen } from './components/HomeScreen';
+import { MainChatInterface } from './components/MainChatInterface';
+import { SettingsScreen } from './components/SettingsScreen';
 
-// 메인 앱 컴포넌트
-function AppContent() {
-  // 커스텀 훅들로 상태 관리
-  const auth = useAuth();
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
+import MobileHomeScreen from './components/mobile/MobileHomeScreen';
+import MobileChatInterface from './components/mobile/MobileChatInterface';
+import MobileSettingsScreen from './components/mobile/MobileSettingsScreen';
+import MobileBottomNav from './components/mobile/MobileBottomNav';
+
+export default function App() {
+  const [screen, setScreen] = useState<Screen>('login');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { files, onToggleFavorite, onFileSelect, selectedFile, setSelectedFile } = useFiles();
+  const {
+    apiKeys, hasConnectedApiKeys, connectedKeys,
+    onUpdateApiKeys, onDisconnectAllApiKeys, onDisconnectApiKey, onConnectApiKey
+  } = useApiKeys();
   const { isMobile } = useMobile();
-  const files = useFiles();
-  const apiKeys = useApiKeys();
 
-  // 모바일 네비게이션 핸들러
-  const handleMobileNavigate = React.useCallback((screen: Screen) => {
-    auth.navigateToScreen(screen);
-  }, [auth]);
+  const go = (s: Screen) => setScreen(s);
 
-  // 현재 화면에 따른 컴포넌트 렌더링 로직
-  const renderCurrentScreen = useMemo(() => {
-    const { isAuthenticated, hasCompletedOnboarding, currentScreen } = auth;
-
-    // 인증되지 않은 사용자 화면
-    if (!isAuthenticated) {
-      switch (currentScreen) {
-        case 'login':
-          return (
-            <LoginScreen 
-              onLogin={auth.handleLogin}
-              onSignupClick={() => auth.navigateToScreen('signup')}
-            />
-          );
-        case 'signup':
-          return (
-            <SignupScreen 
-              onSignup={auth.handleSignup}
-              onBackToLogin={() => auth.navigateToScreen('login')}
-            />
-          );
-        default:
-          return null;
-      }
-    }
-
-    // 온보딩 화면
-    if (!hasCompletedOnboarding) {
-      return <OnboardingScreen onComplete={auth.handleOnboardingComplete} />;
-    }
-
-    // 공통 props 생성
-    const commonProps = {
-      home: {
-        onNavigateToChat: () => auth.navigateToScreen('chat'),
-        onOpenSettings: () => auth.navigateToScreen('settings'),
-        hasConnectedApiKeys: apiKeys.hasConnectedApiKeys,
-        files: files.files,
-        onToggleFavorite: files.onToggleFavorite,
-        onFileSelect: files.onFileSelect,
-        onDisconnectAllApiKeys: apiKeys.onDisconnectAllApiKeys,
-        apiKeys: apiKeys.apiKeys
-      },
-      chat: {
-        onOpenSettings: () => auth.navigateToScreen('settings'),
-        onFileSelect: files.onFileSelect,
-        onBack: () => auth.navigateToScreen('home'),
-        files: files.files,
-        onToggleFavorite: files.onToggleFavorite
-      },
-      settings: {
-        onBack: () => auth.navigateToScreen('home'),
-        onLogout: auth.handleLogout,
-        apiKeys: apiKeys.apiKeys,
-        onUpdateApiKeys: apiKeys.onUpdateApiKeys,
-        onDisconnectApiKey: apiKeys.onDisconnectApiKey,
-        onConnectApiKey: apiKeys.onConnectApiKey,
-        isDarkMode,
-        onToggleDarkMode: toggleDarkMode
-      }
-    };
-
-    // 모바일 버전
-    if (isMobile) {
+  // Desktop (간단한 내비게이션)
+  if (!isMobile) {
+    if (screen === 'login') return <LoginScreen onLogin={() => go('onboarding')} onSignupClick={() => go('signup')} />;
+    if (screen === 'signup') return <SignupScreen onSignup={() => go('onboarding')} onBackToLogin={() => go('login')} />;
+    if (screen === 'onboarding') return <OnboardingScreen onComplete={() => go('home')} />;
+    if (screen === 'home') {
       return (
-        <div className="relative">
-          <Suspense fallback={<LoadingSpinner />}>
-            {currentScreen === 'home' && <MobileHomeScreen {...commonProps.home} />}
-            {currentScreen === 'chat' && <MobileChatInterface {...commonProps.chat} />}
-            {currentScreen === 'settings' && <MobileSettingsScreen {...commonProps.settings} />}
-            
-            {/* 하단 네비게이션 - 채팅 화면에서는 숨김 */}
-            {currentScreen !== 'chat' && (
-              <MobileBottomNav
-                currentScreen={currentScreen}
-                onNavigate={handleMobileNavigate}
-                hasUnreadMessages={false}
-              />
-            )}
-          </Suspense>
+        <div className={isDarkMode ? 'dark' : ''}>
+          <HomeScreen
+            onNavigateToChat={() => go('chat')}
+            onOpenSettings={() => go('settings')}
+            hasConnectedApiKeys={hasConnectedApiKeys}
+            files={files}
+            onToggleFavorite={onToggleFavorite}
+            onFileSelect={(f: FileItem) => setSelectedFile(f)}
+            onDisconnectAllApiKeys={onDisconnectAllApiKeys}
+            apiKeys={apiKeys}
+          />
         </div>
       );
     }
+    if (screen === 'chat') {
+      return (
+        <MainChatInterface
+          onOpenSettings={() => go('settings')}
+          onFileSelect={(f) => setSelectedFile(f)}
+          onBack={() => go('home')}
+          files={files}
+          onToggleFavorite={onToggleFavorite}
+        />
+      );
+    }
+    if (screen === 'settings') {
+      return (
+        <SettingsScreen
+          onBack={() => go('home')}
+          onLogout={() => go('login')}
+          apiKeys={apiKeys}
+          onUpdateApiKeys={onUpdateApiKeys}
+          onDisconnectApiKey={onDisconnectApiKey}
+          onConnectApiKey={onConnectApiKey}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={setIsDarkMode}
+        />
+      );
+    }
+    return null;
+  }
 
-    // 데스크탑 버전
-    return (
-      <Suspense fallback={<LoadingSpinner />}>
-        {currentScreen === 'home' && <HomeScreen {...commonProps.home} />}
-        {currentScreen === 'chat' && <MainChatInterface {...commonProps.chat} />}
-        {currentScreen === 'settings' && <SettingsScreen {...commonProps.settings} />}
-      </Suspense>
-    );
-  }, [auth, files, apiKeys, isDarkMode, toggleDarkMode, isMobile, handleMobileNavigate]);
+  // Mobile
+  if (screen === 'login') return <LoginScreen onLogin={() => go('onboarding')} onSignupClick={() => go('signup')} />;
+  if (screen === 'signup') return <SignupScreen onSignup={() => go('onboarding')} onBackToLogin={() => go('login')} />;
+  if (screen === 'onboarding') return <OnboardingScreen onComplete={() => go('home')} />;
 
   return (
-    <div className={`min-h-screen bg-background relative ${isMobile ? 'overflow-hidden' : 'overflow-auto'}`}>
-      <div className="relative z-10 min-h-screen">
-        {renderCurrentScreen}
-
-        {/* 파일 미리보기 드로어 - 모바일/데스크탑 공통 */}
-        {files.showPreviewDrawer && files.selectedFile && (
-          <FilePreviewDrawer 
-            file={files.selectedFile}
-            isOpen={files.showPreviewDrawer}
-            onClose={files.handleClosePreview}
-            onToggleFavorite={files.onToggleFavorite}
+    <div className={isDarkMode ? 'dark' : ''}>
+      {screen === 'home' && (
+        <>
+          <MobileHomeScreen
+            onNavigateToChat={() => go('chat')}
+            onOpenSettings={() => go('settings')}
+            hasConnectedApiKeys={hasConnectedApiKeys}
+            files={files}
+            onToggleFavorite={onToggleFavorite}
+            onFileSelect={(f) => setSelectedFile(f)}
+            apiKeys={apiKeys}
           />
-        )}
-      </div>
-    </div>
-  );
-}
+          <MobileBottomNav currentScreen="home" onNavigate={(s) => go(s as any)} />
+        </>
+      )}
 
-// 메인 App 컴포넌트 (에러 경계 포함)
-export default function App() {
-  return (
-    <ErrorBoundary>
-      <AppContent />
-    </ErrorBoundary>
+      {screen === 'chat' && (
+        <>
+          <MobileChatInterface
+            onFileSelect={(f) => setSelectedFile(f)}
+            onBack={() => go('home')}
+            files={files}
+            onToggleFavorite={onToggleFavorite}
+          />
+          <MobileBottomNav currentScreen="chat" onNavigate={(s) => go(s as any)} />
+        </>
+      )}
+
+      {screen === 'settings' && (
+        <>
+          <MobileSettingsScreen
+            onBack={() => go('home')}
+            onLogout={() => go('login')}
+            apiKeys={apiKeys}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={setIsDarkMode}
+          />
+          <MobileBottomNav currentScreen="settings" onNavigate={(s) => go(s as any)} />
+        </>
+      )}
+    </div>
   );
 }

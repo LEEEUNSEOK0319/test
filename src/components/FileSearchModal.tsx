@@ -8,18 +8,8 @@ import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { ScrollArea } from './ui/scroll-area';
 import { Card } from './ui/card';
-import {
-  Search,
-  X,
-  Filter,
-  Calendar as CalendarIcon,
-  FileText,
-  File,
-  FileSpreadsheet,
-  ExternalLink,
-  Star
-} from 'lucide-react';
-import { FileItem } from '../types';
+import { Search, Filter, Calendar as CalendarIcon, FileText } from 'lucide-react';
+import type { FileItem } from '../types';
 
 interface FileSearchModalProps {
   isOpen: boolean;
@@ -29,20 +19,14 @@ interface FileSearchModalProps {
   onToggleFavorite: (fileId: string) => void;
 }
 
-const recentQueries = [
-  '2023년 발표자료',
-  '홍길동 계약서',
-  '송무 관련 PDF',
-  '회의록 요약본',
-  '신제품 기획서'
-];
+const recentQueries = ['2023년 발표자료', '홍길동 계약서', '송무 관련 PDF', '회의록 요약본', '신제품 기획서'];
 
 export function FileSearchModal({
   isOpen,
   onClose,
   onFileSelect,
   files,
-  onToggleFavorite
+  onToggleFavorite,
 }: FileSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [fileType, setFileType] = useState('all');
@@ -52,280 +36,162 @@ export function FileSearchModal({
   const [isSearching, setIsSearching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const getFileIcon = (icon: string, type: string) => {
-    // 기존 이모지 아이콘이 있으면 그것을 사용
-    if (icon && icon !== type) {
-      return <span className="text-lg">{icon}</span>;
-    }
-    
-    // 없으면 타입에 따라 아이콘 표시
-    switch (type.toLowerCase()) {
-      case 'pdf':
-        return <File className="w-4 h-4 text-red-500" />;
-      case 'powerpoint':
-      case 'pptx':
-        return <FileSpreadsheet className="w-4 h-4 text-orange-500" />;
-      case 'word':
-      case 'docx':
-        return <FileText className="w-4 h-4 text-blue-500" />;
-      case 'excel':
-      case 'xlsx':
-        return <FileSpreadsheet className="w-4 h-4 text-green-500" />;
-      default:
-        return <FileText className="w-4 h-4 text-gray-500" />;
-    }
+  const getFileIcon = (icon: string | undefined, type: string) => {
+    if (icon && icon !== type) return <span className="mr-2">{icon}</span>;
+    return <FileText className="w-4 h-4 mr-2" />;
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-    
     setIsSearching(true);
-    // 실제 파일 데이터에서 검색
+
     setTimeout(() => {
-      let filteredFiles = files.filter(file =>
-        file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        file.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        file.modifiedBy.toLowerCase().includes(searchQuery.toLowerCase())
+      let filtered = files.filter(
+        f =>
+          f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          f.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          f.modifiedBy.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
-      // 파일 타입 필터 적용
-      if (fileType !== 'all') {
-        filteredFiles = filteredFiles.filter(file =>
-          file.type.toLowerCase() === fileType.toLowerCase()
-        );
-      }
+      if (fileType !== 'all') filtered = filtered.filter(f => f.type.toLowerCase() === fileType);
 
-      // 작성자 필터 적용
-      if (owner !== 'all') {
-        filteredFiles = filteredFiles.filter(file =>
-          file.modifiedBy === owner
-        );
-      }
+      if (owner !== 'all') filtered = filtered.filter(f => f.modifiedBy === owner);
 
-      setSearchResults(filteredFiles);
+      setSearchResults(filtered);
       setIsSearching(false);
-    }, 1000);
+    }, 500);
   };
 
-  const handleQuerySelect = (query: string) => {
-    setSearchQuery(query);
-    handleSearch();
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const onKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleSearch();
     }
   };
 
-  const clearFilters = () => {
-    setFileType('all');
-    setOwner('all');
-    setDateRange({});
-  };
-
-  // 고유한 작성자 목록 생성
-  const uniqueAuthors = Array.from(new Set(files.map(file => file.modifiedBy)));
+  const uniqueAuthors = Array.from(new Set(files.map(f => f.modifiedBy)));
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col glass-strong border border-white/20">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 dark:text-white">파일 검색</DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-400">
-            파일명, 타입, 작성자를 기준으로 파일을 검색하고 필터를 적용할 수 있습니다.
-          </DialogDescription>
+          <DialogTitle>파일 검색</DialogTitle>
+          <DialogDescription>파일명, 타입, 작성자를 기준으로 검색하고 필터를 적용할 수 있습니다.</DialogDescription>
         </DialogHeader>
 
-        {/* Search Input */}
-        <div className="space-y-4">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="예: 2023년 발표자료, 송무 관련 PDF, 회의록 요약본"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="flex-1 bg-white/80 dark:bg-gray-800/80 border border-white/20"
-            />
-            <Button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || isSearching}
-              className="bg-gradient-primary hover:shadow-lg btn-glow text-white border-0"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="border-white/20 text-gray-700 dark:text-gray-300 hover:bg-white/10"
-            >
-              <Filter className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Recent Queries */}
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">최근 검색어</p>
-            <div className="flex flex-wrap gap-2">
-              {recentQueries.map((query, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="cursor-pointer hover:bg-white/20 bg-white/10 text-gray-700 dark:text-gray-300 card-hover"
-                  onClick={() => handleQuerySelect(query)}
-                >
-                  {query}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Filters */}
-          {showFilters && (
-            <Card className="p-4 glass border border-white/20">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">파일 형식</label>
-                  <Select value={fileType} onValueChange={setFileType}>
-                    <SelectTrigger className="bg-white/80 dark:bg-gray-800/80 border border-white/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="glass-strong border border-white/20">
-                      <SelectItem value="all">모든 형식</SelectItem>
-                      <SelectItem value="pdf">PDF</SelectItem>
-                      <SelectItem value="word">Word</SelectItem>
-                      <SelectItem value="powerpoint">PowerPoint</SelectItem>
-                      <SelectItem value="excel">Excel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">작성자</label>
-                  <Select value={owner} onValueChange={setOwner}>
-                    <SelectTrigger className="bg-white/80 dark:bg-gray-800/80 border border-white/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="glass-strong border border-white/20">
-                      <SelectItem value="all">모든 사용자</SelectItem>
-                      {uniqueAuthors.map((author) => (
-                        <SelectItem key={author} value={author}>{author}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">수정 날짜</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start bg-white/80 dark:bg-gray-800/80 border border-white/20"
-                      >
-                        <CalendarIcon className="w-4 h-4 mr-2" />
-                        {dateRange.from ? '선택됨' : '날짜 선택'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 glass-strong border border-white/20">
-                      <Calendar
-                        mode="range"
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-4">
-                <Button
-                  variant="ghost"
-                  onClick={clearFilters}
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white/10"
-                >
-                  필터 초기화
-                </Button>
-              </div>
-            </Card>
-          )}
+        <div className="flex gap-2">
+          <Input
+            placeholder="예) 마케팅 보고서"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={onKeyPress}
+          />
+          <Button variant="outline" onClick={() => setShowFilters(s => !s)}>
+            <Filter className="w-4 h-4 mr-2" />
+            필터
+          </Button>
+          <Button onClick={handleSearch}>
+            <Search className="w-4 h-4 mr-2" />
+            검색
+          </Button>
         </div>
 
-        {/* Search Results */}
-        <ScrollArea className="flex-1">
-          {isSearching ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-                <span className="text-gray-600 dark:text-gray-400">검색 중...</span>
+        {showFilters && (
+          <Card className="p-3 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <div className="text-sm mb-1">파일 형식</div>
+                <Select value={fileType} onValueChange={setFileType}>
+                  <SelectTrigger><SelectValue placeholder="모든 형식" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">모든 형식</SelectItem>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="word">Word</SelectItem>
+                    <SelectItem value="powerpoint">PowerPoint</SelectItem>
+                    <SelectItem value="excel">Excel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <div className="text-sm mb-1">작성자</div>
+                <Select value={owner} onValueChange={setOwner}>
+                  <SelectTrigger><SelectValue placeholder="모든 사용자" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">모든 사용자</SelectItem>
+                    {uniqueAuthors.map(a => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <div className="text-sm mb-1">수정 날짜</div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start">
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      {dateRange.from ? '선택됨' : '날짜 선택'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
+          </Card>
+        )}
+
+        <div className="space-y-2">
+          <div className="text-sm text-muted-foreground">최근 검색어</div>
+          <div className="flex gap-2 flex-wrap">
+            {recentQueries.map((q, idx) => (
+              <Badge key={idx} variant="secondary" className="cursor-pointer" onClick={() => { setSearchQuery(q); handleSearch(); }}>
+                {q}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <ScrollArea className="h-64 mt-2">
+          {isSearching ? (
+            <div className="text-center text-sm text-muted-foreground py-8">검색 중...</div>
           ) : searchResults.length > 0 ? (
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">{searchResults.length}개의 결과</p>
-              {searchResults.map((file) => (
-                <Card key={file.id} className="p-4 glass hover:bg-white/20 dark:hover:bg-gray-800/20 transition-all border border-white/20 card-hover group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {getFileIcon(file.icon, file.type)}
-                      <div>
-                        <p className="text-gray-900 dark:text-white font-medium">{file.name}</p>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                          <span>{file.type}</span>
-                          <span>•</span>
-                          <span>{file.size}</span>
-                          <span>•</span>
-                          <span>{file.modified}</span>
-                          <span>•</span>
-                          <span>{file.modifiedBy}</span>
-                        </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{file.path}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleFavorite(file.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0 hover:bg-white/20"
-                      >
-                        <Star
-                          className={`w-4 h-4 ${
-                            file.isFavorite
-                              ? 'text-yellow-500 fill-yellow-500'
-                              : 'text-gray-400 hover:text-yellow-500'
-                          }`}
-                        />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onFileSelect(file)}
-                        className="text-gray-700 dark:text-gray-300 border-white/20 hover:bg-white/10"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        열기
-                      </Button>
+            <div className="space-y-2">
+              <div className="text-sm">{searchResults.length}개의 결과</div>
+              {searchResults.map(f => (
+                <Card
+                  key={f.id}
+                  className="p-3 flex items-center gap-3 hover:bg-accent cursor-pointer"
+                  onClick={() => onFileSelect(f)}
+                >
+                  {getFileIcon(f.icon, f.type)}
+                  <div className="flex-1">
+                    <div className="font-medium">{f.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {f.type} • {f.size} • {f.modified} • {f.modifiedBy}
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(f.id); }}
+                    aria-label={f.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                  >
+                    ★
+                  </Button>
                 </Card>
               ))}
             </div>
-          ) : searchQuery && !isSearching ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <p className="text-gray-600 dark:text-gray-400">검색 결과가 없습니다</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">다른 검색어로 시도해보세요</p>
-              </div>
-            </div>
           ) : (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-gray-400 dark:text-gray-500">검색어를 입력하세요</p>
-            </div>
+            <div className="text-center text-sm text-muted-foreground py-8">검색 결과가 없습니다.</div>
           )}
         </ScrollArea>
       </DialogContent>

@@ -1,51 +1,47 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ApiKey, ApiKeysHookReturn } from '../types';
+import type { ApiKey } from '../types';
 import { initialApiKeys } from '../data/mockData';
 
-export function useApiKeys(): ApiKeysHookReturn {
+export function useApiKeys() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>(initialApiKeys);
 
-  const hasConnectedApiKeys = useMemo(() => 
-    apiKeys.some(key => key.isConnected), 
-    [apiKeys]
+  const hasConnectedApiKeys = useMemo(
+    () => apiKeys.some(k => k.isConnected),
+    [apiKeys],
   );
 
-  const connectedKeys = useMemo(() => 
-    apiKeys.filter(key => key.isConnected), 
-    [apiKeys]
+  const connectedKeys = useMemo(
+    () => apiKeys.filter(k => k.isConnected),
+    [apiKeys],
   );
 
-  const handleUpdateApiKeys = useCallback((newApiKeys: ApiKey[]) => {
+  const onUpdateApiKeys = useCallback((newApiKeys: ApiKey[]) => {
     setApiKeys(newApiKeys);
   }, []);
 
-  const handleDisconnectAllApiKeys = useCallback(() => {
-    setApiKeys(prevKeys => 
-      prevKeys.map(key => ({
-        ...key,
+  const onDisconnectAllApiKeys = useCallback(() => {
+    setApiKeys(prev =>
+      prev.map(k => ({
+        ...k,
         isConnected: false,
-        lastUsed: key.isConnected ? '방금 연결 해제됨' : key.lastUsed
-      }))
+        lastUsed: k.isConnected ? '방금 연결 해제됨' : k.lastUsed,
+      })),
     );
   }, []);
 
-  const handleDisconnectApiKey = useCallback((apiKeyId: string) => {
-    setApiKeys(prevKeys => 
-      prevKeys.map(key => 
-        key.id === apiKeyId 
-          ? { ...key, isConnected: false, lastUsed: '방금 연결 해제됨' }
-          : key
-      )
+  const onDisconnectApiKey = useCallback((apiKeyId: string) => {
+    setApiKeys(prev =>
+      prev.map(k =>
+        k.id === apiKeyId ? { ...k, isConnected: false, lastUsed: '방금 연결 해제됨' } : k,
+      ),
     );
   }, []);
 
-  const handleConnectApiKey = useCallback((apiKeyId: string) => {
-    setApiKeys(prevKeys => 
-      prevKeys.map(key => 
-        key.id === apiKeyId 
-          ? { ...key, isConnected: true, lastUsed: '방금 전' }
-          : key
-      )
+  const onConnectApiKey = useCallback((apiKeyId: string) => {
+    setApiKeys(prev =>
+      prev.map(k =>
+        k.id === apiKeyId ? { ...k, isConnected: true, lastUsed: '방금 전' } : k,
+      ),
     );
   }, []);
 
@@ -53,9 +49,9 @@ export function useApiKeys(): ApiKeysHookReturn {
     apiKeys,
     hasConnectedApiKeys,
     connectedKeys,
-    onUpdateApiKeys: handleUpdateApiKeys,
-    onDisconnectAllApiKeys: handleDisconnectAllApiKeys,
-    onDisconnectApiKey: handleDisconnectApiKey,
-    onConnectApiKey: handleConnectApiKey
+    onUpdateApiKeys,
+    onDisconnectAllApiKeys,
+    onDisconnectApiKey,
+    onConnectApiKey,
   };
 }
