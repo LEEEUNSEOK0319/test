@@ -8,11 +8,12 @@ import { ApiKeyModal } from './ApiKeyModal';
 import { ApiConnectionStatus } from './ApiConnectionStatus';
 import { HelpModal } from './HelpModal';
 import type { ApiKey } from '../types';
-import { 
-  ArrowLeft, 
-  User, 
-  Shield, 
-  Palette, 
+import { useTheme } from '../contexts/theme';
+import {
+  ArrowLeft,
+  User,
+  Shield,
+  Palette,
   HelpCircle,
   LogOut,
   Settings as SettingsIcon,
@@ -43,16 +44,17 @@ interface SettingsScreenProps {
   onUpdateApiKeys: (newApiKeys: ApiKey[]) => void;
   onDisconnectApiKey: (apiKeyId: string) => void;
   onConnectApiKey: (apiKeyId: string) => void;
-  isDarkMode: boolean;
-  onToggleDarkMode: (value: boolean) => void;
+  isDarkMode?: boolean;              // (구버전 호환용) 안 써도 됨
+  onToggleDarkMode?: (value: boolean) => void; // (구버전 호환용)
+
 }
 
-export function SettingsScreen({ 
-  onBack, 
-  onLogout, 
-  apiKeys, 
-  onUpdateApiKeys, 
-  onDisconnectApiKey, 
+export function SettingsScreen({
+  onBack,
+  onLogout,
+  apiKeys,
+  onUpdateApiKeys,
+  onDisconnectApiKey,
   onConnectApiKey,
   isDarkMode,
   onToggleDarkMode
@@ -69,6 +71,16 @@ export function SettingsScreen({
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [editingApiKey, setEditingApiKey] = useState<{ id: string; name: string; key: string } | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // 테마 컨텍스트 사용
+  const { theme, setTheme, toggle } = useTheme();
+  const isDark = theme === 'dark';
+
+  const handleToggleDark = (value: boolean) => {
+    setTheme(value ? 'dark' : 'light');
+    // 구버전 호환: 기존 프롭 콜백이 넘어오면 같이 호출
+    onToggleDarkMode?.(value);
+  };
 
   const tabs = [
     { id: 'profile', label: '프로필', icon: <User className="w-4 h-4" /> },
@@ -95,8 +107,8 @@ export function SettingsScreen({
   const handleSaveApiKey = (key: string, name: string) => {
     if (editingApiKey) {
       // 기존 키 수정
-      const updatedApiKeys = apiKeys.map(item => 
-        item.id === editingApiKey.id 
+      const updatedApiKeys = apiKeys.map(item =>
+        item.id === editingApiKey.id
           ? { ...item, name, key, maskedKey: key.substring(0, 3) + '***************' + key.slice(-4) }
           : item
       );
@@ -167,11 +179,10 @@ export function SettingsScreen({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-primary text-white shadow-lg'
-                        : 'text-foreground hover:bg-accent'
-                    }`}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.id
+                      ? 'bg-gradient-primary text-white shadow-lg'
+                      : 'text-foreground hover:bg-accent'
+                      }`}
                   >
                     {tab.icon}
                     <span className="font-medium">{tab.label}</span>
@@ -191,11 +202,10 @@ export function SettingsScreen({
                     <h2 className="text-xl font-semibold text-foreground">프로필 정보</h2>
                     <Button
                       onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
-                      className={`${
-                        isEditing 
-                          ? 'bg-gradient-primary btn-glow text-white' 
-                          : 'glass hover:bg-accent text-foreground'
-                      } font-medium rounded-xl h-10 px-4 border-0`}
+                      className={`${isEditing
+                        ? 'bg-gradient-primary btn-glow text-white'
+                        : 'glass hover:bg-accent text-foreground'
+                        } font-medium rounded-xl h-10 px-4 border-0`}
                     >
                       {isEditing ? (
                         <>
@@ -350,17 +360,17 @@ export function SettingsScreen({
                     <div className="glass p-6 rounded-xl border border-border">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          {isDarkMode ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
+                          {isDark ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
                           <div>
                             <p className="font-medium text-foreground">다크 모드</p>
                             <p className="text-sm text-muted-foreground">
-                              {isDarkMode ? '어두운 테마가 활성화되어 있습니다' : '밝은 테마가 활성화되어 있습니다'}
+                              {isDark ? '어두운 테마가 활성화되어 있습니다' : '밝은 테마가 활성화되어 있습니다'}
                             </p>
                           </div>
                         </div>
                         <Switch
-                          checked={isDarkMode}
-                          onCheckedChange={onToggleDarkMode}
+                          checked={isDark}
+                          onCheckedChange={handleToggleDark}
                         />
                       </div>
                     </div>
@@ -434,17 +444,16 @@ export function SettingsScreen({
                                   <span>마지막 사용: {apiKey.lastUsed}</span>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center space-x-2 ml-4">
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => apiKey.isConnected ? onDisconnectApiKey(apiKey.id) : onConnectApiKey(apiKey.id)}
-                                  className={`w-8 h-8 p-0 rounded-lg ${
-                                    apiKey.isConnected 
-                                      ? 'text-red-500 hover:text-red-700 hover:bg-red-100/20'
-                                      : 'text-green-500 hover:text-green-700 hover:bg-green-100/20'
-                                  }`}
+                                  className={`w-8 h-8 p-0 rounded-lg ${apiKey.isConnected
+                                    ? 'text-red-500 hover:text-red-700 hover:bg-red-100/20'
+                                    : 'text-green-500 hover:text-green-700 hover:bg-green-100/20'
+                                    }`}
                                 >
                                   {apiKey.isConnected ? <Unplug className="w-4 h-4" /> : <Plug className="w-4 h-4" />}
                                 </Button>
@@ -560,7 +569,7 @@ export function SettingsScreen({
                             <p className="text-sm text-muted-foreground">사용법과 문제 해결 방법을 확인하세요</p>
                           </div>
                         </div>
-                        <Button 
+                        <Button
                           onClick={() => setShowHelpModal(true)}
                           className="glass hover:bg-accent text-foreground font-medium rounded-xl border-0"
                         >
@@ -595,7 +604,7 @@ export function SettingsScreen({
                             <p className="text-sm text-red-600">계정에서 로그아웃합니다</p>
                           </div>
                         </div>
-                        <Button 
+                        <Button
                           onClick={onLogout}
                           variant="destructive"
                           className="font-medium rounded-xl px-4 h-10 border-0"
