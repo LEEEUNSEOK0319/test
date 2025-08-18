@@ -8,11 +8,11 @@ import { ApiKeyModal } from '../settings/ApiKeyModal';
 import { ApiConnectionStatus } from '../settings/ApiConnectionStatus';
 import { HelpModal } from '../../components/common/HelpModal';
 import type { ApiKey } from '../../types';
-import { 
-  ArrowLeft, 
-  User, 
-  Shield, 
-  Palette, 
+import {
+  ArrowLeft,
+  User,
+  Shield,
+  Palette,
   HelpCircle,
   LogOut,
   Settings as SettingsIcon,
@@ -36,6 +36,14 @@ import {
   XCircle
 } from 'lucide-react';
 
+// --- 소셜 로그인 아이콘 컴포넌트 (그대로 유지) ---
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" /><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" /><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.519-3.355-11.113-7.918l-6.522,5.023C9.505,39.556,16.227,44,24,44z" /><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.986,36.681,44,30.986,44,24C44,22.659,43.862,21.35,43.611,20.083z" /></svg>
+);
+const KakaoIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px" {...props}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c5.52 0 10-4.48 10-10S17.52 2 12 2zm1.06 13.44c-.4.23-1.02.5-1.72.58-.02 0-.03 0-.05.01-.13.01-.26.01-.39.01-.68 0-1.33-.12-1.9-.34-.95-.37-1.5-1.12-1.5-2.07 0-1.29 1.12-2.34 2.5-2.34.82 0 1.51.37 1.9.7l-.61.99c-.27-.26-.74-.53-1.29-.53-.69 0-1.25.45-1.25 1.15s.56 1.15 1.25 1.15c.19 0 .38-.02.56-.06l.75 1.22zM17.5 12c0 .96-.54 1.7-1.5 2.07-.57.22-1.23.34-1.9.34-.13 0-.26 0-.39-.01-.02 0-.03 0-.05-.01-.7-.08-1.32-.35-1.72-.58l.75-1.22c.18.04.37.06.56.06.69 0 1.25-.45 1.25-1.15s-.56-1.15-1.25-1.15c-.55 0-1.02.27-1.29.53l-.61-.99c.39-.33 1.08-.7 1.9-.7 1.38 0 2.5 1.05 2.5 2.34z" fill="#3C1E1E"/></svg>
+);
+
 interface SettingsScreenProps {
   onBack: () => void;
   onLogout: () => void;
@@ -47,12 +55,12 @@ interface SettingsScreenProps {
   onToggleDarkMode: (value: boolean) => void;
 }
 
-export function SettingsScreen({ 
-  onBack, 
-  onLogout, 
-  apiKeys, 
-  onUpdateApiKeys, 
-  onDisconnectApiKey, 
+export function SettingsScreen({
+  onBack,
+  onLogout,
+  apiKeys,
+  onUpdateApiKeys,
+  onDisconnectApiKey,
   onConnectApiKey,
   isDarkMode,
   onToggleDarkMode
@@ -95,8 +103,8 @@ export function SettingsScreen({
   const handleSaveApiKey = (key: string, name: string) => {
     if (editingApiKey) {
       // 기존 키 수정
-      const updatedApiKeys = apiKeys.map(item => 
-        item.id === editingApiKey.id 
+      const updatedApiKeys = apiKeys.map(item =>
+        item.id === editingApiKey.id
           ? { ...item, name, key, maskedKey: key.substring(0, 3) + '***************' + key.slice(-4) }
           : item
       );
@@ -167,11 +175,10 @@ export function SettingsScreen({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all ${
-                      activeTab === tab.id
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all ${activeTab === tab.id
                         ? 'bg-gradient-primary text-white shadow-lg'
                         : 'text-foreground hover:bg-accent'
-                    }`}
+                      }`}
                   >
                     {tab.icon}
                     <span className="font-medium">{tab.label}</span>
@@ -191,11 +198,10 @@ export function SettingsScreen({
                     <h2 className="text-xl font-semibold text-foreground">프로필 정보</h2>
                     <Button
                       onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
-                      className={`${
-                        isEditing 
-                          ? 'bg-gradient-primary btn-glow text-white' 
+                      className={`${isEditing
+                          ? 'bg-gradient-primary btn-glow text-white'
                           : 'glass hover:bg-accent text-foreground'
-                      } font-medium rounded-xl h-10 px-4 border-0`}
+                        } font-medium rounded-xl h-10 px-4 border-0`}
                     >
                       {isEditing ? (
                         <>
@@ -434,17 +440,16 @@ export function SettingsScreen({
                                   <span>마지막 사용: {apiKey.lastUsed}</span>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center space-x-2 ml-4">
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => apiKey.isConnected ? onDisconnectApiKey(apiKey.id) : onConnectApiKey(apiKey.id)}
-                                  className={`w-8 h-8 p-0 rounded-lg ${
-                                    apiKey.isConnected 
+                                  className={`w-8 h-8 p-0 rounded-lg ${apiKey.isConnected
                                       ? 'text-red-500 hover:text-red-700 hover:bg-red-100/20'
                                       : 'text-green-500 hover:text-green-700 hover:bg-green-100/20'
-                                  }`}
+                                    }`}
                                 >
                                   {apiKey.isConnected ? <Unplug className="w-4 h-4" /> : <Plug className="w-4 h-4" />}
                                 </Button>
@@ -560,7 +565,7 @@ export function SettingsScreen({
                             <p className="text-sm text-muted-foreground">사용법과 문제 해결 방법을 확인하세요</p>
                           </div>
                         </div>
-                        <Button 
+                        <Button
                           onClick={() => setShowHelpModal(true)}
                           className="glass hover:bg-accent text-foreground font-medium rounded-xl border-0"
                         >
@@ -595,13 +600,23 @@ export function SettingsScreen({
                             <p className="text-sm text-red-600">계정에서 로그아웃합니다</p>
                           </div>
                         </div>
-                        <Button 
+                        <Button
                           onClick={onLogout}
                           variant="destructive"
                           className="font-medium rounded-xl px-4 h-10 border-0"
                         >
                           로그아웃
                         </Button>
+                      </div>
+                      {/* --- 👇 회원탈퇴 버튼 추가 --- */}
+                      <div className="text-center mt-4">
+                        <button
+                          // onClick 핸들러는 추후 실제 탈퇴 로직으로 연결
+                          onClick={() => alert('정말루 진짜루 회원 탈퇴 할거에요?')}
+                          className="text-sm text-muted-foreground hover:text-destructive hover:underline transition-colors"
+                        >
+                          회원 탈퇴
+                        </button>
                       </div>
                     </div>
                   </div>

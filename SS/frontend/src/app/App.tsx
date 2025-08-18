@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useFiles } from '../features/files/useFiles';
 import { useApiKeys } from '../features/settings/useApiKeys';
@@ -25,6 +25,16 @@ type Screen = 'login' | 'signup' | 'onboarding' | 'home' | 'chat' | 'settings';
 export default function App() {
   const [screen, setScreen] = useState<Screen>('login');
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    // isDarkMode가 true이면 'dark' 클래스를 추가하고, false이면 제거합니다.
+    if (isDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [isDarkMode]); // isDarkMode 상태가 변경될 때마다 이 함수가 실행됩니다.
 
   const {
     files,
@@ -103,7 +113,7 @@ export default function App() {
             files={files}
             onToggleFavorite={onToggleFavorite}
             // --- 👇 이 부분이 수정되었습니다 ---
-            apiKeys={apiKeys} 
+            apiKeys={apiKeys}
           />
           {selectedFile && (
             <FilePreviewDrawer
