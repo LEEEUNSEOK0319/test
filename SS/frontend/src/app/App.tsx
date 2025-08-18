@@ -12,12 +12,9 @@ import { HomeScreen } from '../features/home/HomeScreen';
 import { MainChatInterface } from '../features/chat/MainChatInterface';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 
-// FilePreviewDrawer가 named export라면 다음 줄 유지,
-// default export라면:  import FilePreviewDrawer from './components/FilePreviewDrawer';
 import { FilePreviewDrawer } from '../features/files/FilePreviewDrawer';
 
-// 모바일 컴포넌트가 실제로 있는 경우에만 사용하세요.
-// 없다면 아래 4줄과 모바일 블록은 통째로 삭제해도 됩니다.
+// 모바일 컴포넌트
 import MobileHomeScreen from '../components/mobile/MobileHomeScreen';
 import MobileChatInterface from '../components/mobile/MobileChatInterface';
 import MobileSettingsScreen from '../components/mobile/MobileSettingsScreen';
@@ -29,7 +26,6 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('login');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // ✅ 변경된 useFiles 반환 형태에 맞게 구조 분해
   const {
     files,
     showPreviewDrawer,
@@ -42,7 +38,7 @@ export default function App() {
   const {
     apiKeys,
     hasConnectedApiKeys,
-    connectedKeys,
+    // connectedKeys, // 이 컴포넌트에서 직접 사용하지 않으므로 제거 가능
     onUpdateApiKeys,
     onDisconnectAllApiKeys,
     onDisconnectApiKey,
@@ -86,7 +82,6 @@ export default function App() {
             onDisconnectAllApiKeys={onDisconnectAllApiKeys}
             apiKeys={apiKeys}
           />
-          {/* ✅ 전역 미리보기 드로어 */}
           {selectedFile && (
             <FilePreviewDrawer
               isOpen={showPreviewDrawer}
@@ -107,8 +102,9 @@ export default function App() {
             onBack={() => go('home')}
             files={files}
             onToggleFavorite={onToggleFavorite}
+            // --- 👇 이 부분이 수정되었습니다 ---
+            apiKeys={apiKeys} 
           />
-          {/* ✅ 채팅에서도 파일 열면 전역 드로어로 표시 */}
           {selectedFile && (
             <FilePreviewDrawer
               isOpen={showPreviewDrawer}
@@ -137,7 +133,7 @@ export default function App() {
     return null;
   }
 
-  // ===== 모바일 (모바일 컴포넌트가 실제 있을 때만 사용) =====
+  // ===== 모바일 =====
   if (screen === 'login')
     return (
       <LoginScreen
@@ -171,7 +167,6 @@ export default function App() {
             apiKeys={apiKeys}
           />
           <MobileBottomNav currentScreen="home" onNavigate={(s) => go(s as Screen)} />
-
           {selectedFile && (
             <FilePreviewDrawer
               isOpen={showPreviewDrawer}
@@ -191,9 +186,10 @@ export default function App() {
             files={files}
             onToggleFavorite={onToggleFavorite}
             onOpenSettings={() => go('settings')}
+            // --- 👇 모바일 컴포넌트에도 동일하게 추가합니다 ---
+            apiKeys={apiKeys}
           />
           <MobileBottomNav currentScreen="chat" onNavigate={(s) => go(s as Screen)} />
-
           {selectedFile && (
             <FilePreviewDrawer
               isOpen={showPreviewDrawer}
